@@ -597,8 +597,8 @@ void Search::EnsureBestMoveKnown() REQUIRES(nodes_mutex_)
   if (!root_node_->HasChildren()) return;
 
   float temperature = params_.GetTemperature();
-	bool randombyp = params_.GetRandombyP();
-	bool squared = params_.GetRandombyPSquared();
+  bool randombyp = params_.GetRandombyP();
+  bool squared = params_.GetRandombyPSquared();
   const int cutoff_move = params_.GetTemperatureCutoffMove();
   const int decay_delay_moves = params_.GetTempDecayDelayMoves();
   const int decay_moves = params_.GetTempDecayMoves();
@@ -630,8 +630,6 @@ void Search::EnsureBestMoveKnown() REQUIRES(nodes_mutex_)
     final_pondermove_ = GetBestChildNoTemperature(bestmove_edge.node(), 1)
                             .GetMove(!played_history_.IsBlackToMove());
   }
-
-
 }
 
 // Returns @count children with most visits.
@@ -809,23 +807,23 @@ EdgeAndNode Search::GetRandomChildbyP(bool squared) const {
   // Get sum of weights.
   float total_weights = 0.0;
   for (auto& edge : root_node_->Edges()) {
-		float prob = edge.GetP();
-		if (squared) { // Squaring probabilities gives more natural roll outcomes.
-			total_weights += prob*prob;
-		} else {
-			total_weights += prob;
-		}
+    float prob = edge.GetP();
+    if (squared) { // Squaring probabilities gives more natural roll outcomes.
+      total_weights += prob*prob;
+    } else {
+      total_weights += prob;
+    }
   }
 
   // Choose edge from roll.
   float roll = Random::Get().GetFloat(total_weights);
   for (auto& edge : root_node_->Edges()) {
-		float prob = edge.GetP();
+    float prob = edge.GetP();
     if (squared) {
       if (roll < prob*prob) return edge;
       roll -= prob*prob;
     } else {
-			if (roll < prob) return edge;
+      if (roll < prob) return edge;
       roll -= prob;
     }
   }
