@@ -597,7 +597,8 @@ void Search::EnsureBestMoveKnown() REQUIRES(nodes_mutex_)
   if (!root_node_->HasChildren()) return;
 
   float temperature = params_.GetTemperature();
-  bool randombyp = params_.GetRandombyP();
+	bool randombyp = params_.GetRandombyP();
+	bool squared = params_.GetRandombyPSquared();
   const int cutoff_move = params_.GetTemperatureCutoffMove();
   const int decay_delay_moves = params_.GetTempDecayDelayMoves();
   const int decay_moves = params_.GetTempDecayMoves();
@@ -622,13 +623,15 @@ void Search::EnsureBestMoveKnown() REQUIRES(nodes_mutex_)
   auto bestmove_edge = temperature
                            ? GetBestRootChildWithTemperature(temperature)
                            : GetBestChildNoTemperature(root_node_, 0);
-  if (randombyp) bestmove_edge = GetRandomChildbyP();
+  if (randombyp) bestmove_edge = GetRandomChildbyP(squared);
   final_bestmove_ = bestmove_edge.GetMove(played_history_.IsBlackToMove());
 
   if (bestmove_edge.GetN() > 0 && bestmove_edge.node()->HasChildren()) {
     final_pondermove_ = GetBestChildNoTemperature(bestmove_edge.node(), 1)
                             .GetMove(!played_history_.IsBlackToMove());
   }
+
+
 }
 
 // Returns @count children with most visits.
@@ -801,24 +804,35 @@ EdgeAndNode Search::GetBestRootChildWithTemperature(float temperature) const {
   return {};
 }
 
-// Returns a random child of a root weighted by move probability.
-EdgeAndNode Search::GetRandomChildbyP() const {
-  // Get sum of weights for roll.
+// Returns a child of a root weighted by move probability.
+EdgeAndNode Search::GetRandomChildbyP(bool squared) const {
+  // Get sum of weights.
   float total_weights = 0.0;
   for (auto& edge : root_node_->Edges()) {
-    total_weights += edge.GetP();
+		float prob = edge.GetP();
+		if (squared) { // Squaring probabilities gives more natural roll outcomes.
+			total_weights += prob*prob;
+		} else {
+			total_weights += prob;
+		}
   }
 
-  // Choose edge with roll.
+  // Choose edge from roll.
   float roll = Random::Get().GetFloat(total_weights);
   for (auto& edge : root_node_->Edges()) {
-    if (roll < edge.GetP()) return edge;
-    roll -= edge.GetP();
+		float prob = edge.GetP();
+    if (squared) {
+      if (roll < prob*prob) return edge;
+      roll -= prob*prob;
+    } else {
+			if (roll < prob) return edge;
+      roll -= prob;
+    }
   }
-  
+
   // In case of floating point subtraction issues above.
   return *root_node_->Edges();
-  
+
   assert(false);
   return {};
 }
