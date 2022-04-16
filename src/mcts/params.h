@@ -54,7 +54,11 @@ class SearchParams {
     return at_root ? kCpuctFactorAtRoot : kCpuctFactor;
   }
   bool GetTwoFoldDraws() const { return kTwoFoldDraws; }
-  float GetRandombyP() const { return options_.Get<bool>(kRandombyP); }
+  float GetRandombyP() const {
+    if (options_.Get<bool>(kRandombyPSquared)) return options_.Get<bool>(kRandombyPSquared);
+    return options_.Get<bool>(kRandombyP);
+  }
+  float GetRandombyPSquared() const { return options_.Get<bool>(kRandombyPSquared); }
   float GetTemperature() const { return options_.Get<float>(kTemperatureId); }
   float GetTemperatureVisitOffset() const {
     return options_.Get<float>(kTemperatureVisitOffsetId);
@@ -151,7 +155,8 @@ class SearchParams {
   static const OptionId kCpuctFactorAtRootId;
   static const OptionId kRootHasOwnCpuctParamsId;
   static const OptionId kTwoFoldDrawsId;
-  static const OptionId kRandombyP;
+	static const OptionId kRandombyP;
+  static const OptionId kRandombyPSquared;
   static const OptionId kTemperatureId;
   static const OptionId kTempDecayMovesId;
   static const OptionId kTempDecayDelayMovesId;
